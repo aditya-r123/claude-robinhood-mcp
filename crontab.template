@@ -1,0 +1,12 @@
+# Robinhood Quant Pod crontab template.
+# Install on the EC2 box with:  crontab crontab.template   (after editing the key)
+# Replace REPLACE_WITH_YOUR_ANTHROPIC_API_KEY with your real key. Do NOT commit
+# the filled-in version — the key is a secret.
+
+ANTHROPIC_API_KEY=REPLACE_WITH_YOUR_ANTHROPIC_API_KEY
+
+# Morning Routine: 09:00 AM Eastern Time (Mon-Fri) — pre-flight auth check then trade
+0 9 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh morning
+
+# Afternoon Routine: 03:30 PM Eastern Time (Mon-Fri) — pre-flight auth check then trade
+30 15 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh afternoon

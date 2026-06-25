@@ -1,0 +1,12 @@
+# Copy this file to Makefile.local and fill in your real values.
+#   cp Makefile.local.example Makefile.local
+# Makefile.local is gitignored and must never be committed — it holds
+# infrastructure details (host, key path) and your real account id.
+
+EC2_HOST   = ubuntu@your-ec2-host.compute-1.amazonaws.com
+SSH_KEY    = ~/Downloads/your-key.pem
+REMOTE_DIR = /home/ubuntu/quant_pod
+
+# Real Robinhood account number — used ONLY by `make check-secrets` to confirm
+# it never leaked into a tracked file. Not synced anywhere.
+ACCOUNT_ID = 000000000

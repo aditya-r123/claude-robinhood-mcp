@@ -1,5 +1,25 @@
+# ── Secrets / credentials — NEVER commit ────────────────────────────────────
+.account_id
+.env
+.env.*
+*credentials*
+*.pem
+Makefile.local
+
+# ── Runtime logs & machine-local data ───────────────────────────────────────
 *.log
-*.env
-*.txt
-*.claude
-*.json
+log.txt
+trade_execution.log
+
+# ── Backups / editor / OS cruft ─────────────────────────────────────────────
+*.bak
+*.bak.*
+*.swp
+.DS_Store
+
+# ── Dependencies / stray clones ─────────────────────────────────────────────
+node_modules/
+claude-robinhood-mcp/
+
+# ── Misc local ──────────────────────────────────────────────────────────────
+.claude
