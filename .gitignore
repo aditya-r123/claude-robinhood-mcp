@@ -1,4 +1,5 @@
 # ── Secrets / credentials — NEVER commit ────────────────────────────────────
+ips_prompt.txt
 .account_id
 .env
 .env.*
