@@ -1,12 +1,17 @@
 # Robinhood Quant Pod crontab template.
-# Install on the EC2 box with:  crontab crontab.template   (after editing the key)
-# Replace REPLACE_WITH_YOUR_ANTHROPIC_API_KEY with your real key. Do NOT commit
-# the filled-in version — the key is a secret.
+# Install on the EC2 box with:  crontab crontab.template   (after editing the token)
+#
+# AUTH: this bot runs on your Claude *subscription*, NOT the pay-per-token API.
+# Generate a long-lived token once with `claude setup-token` (requires Pro/Max),
+# then paste it below. Do NOT set ANTHROPIC_API_KEY anywhere — if present it
+# overrides the subscription token and bills the metered API. Keep this file
+# private; the token is a secret (valid ~1 year).
 
-ANTHROPIC_API_KEY=REPLACE_WITH_YOUR_ANTHROPIC_API_KEY
+CLAUDE_CODE_OAUTH_TOKEN=REPLACE_WITH_YOUR_OAUTH_TOKEN
 
-# Morning Routine: 09:00 AM Eastern Time (Mon-Fri) — pre-flight auth check then trade
-0 9 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh morning
+# Morning Routine: 09:35 AM Eastern (Mon-Fri) — after the 09:30 open so the
+# execution-window guardrail (#5) doesn't auto-veto every order.
+35 9 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh morning
 
-# Afternoon Routine: 03:30 PM Eastern Time (Mon-Fri) — pre-flight auth check then trade
+# Afternoon Routine: 03:30 PM Eastern (Mon-Fri) — pre-flight auth check then trade.
 30 15 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh afternoon

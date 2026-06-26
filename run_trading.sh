@@ -39,7 +39,7 @@ fi
 PROMPT_BODY="$(sed "s/__ACCOUNT_ID__/${ACCOUNT_ID}/g" "$PROMPT_FILE")"
 
 echo "[$(ts)] MCP auth OK (robinhood-trading connected). Executing agent (mode=$MODE)..." >> "$LOG"
-"$CLAUDE" -p "$PROMPT_BODY Execute --mode=$MODE" --max-turns 15 --dangerously-skip-permissions --thinking adaptive >> "$LOG" 2>&1
+"$CLAUDE" -p "$PROMPT_BODY Execute --mode=$MODE" --model sonnet --max-turns 15 --dangerously-skip-permissions --thinking adaptive >> "$LOG" 2>&1
 RC=$?
 echo "[$(ts)] ===== Finished $MODE run (claude exit code: $RC) =====" >> "$LOG"
 exit $RC

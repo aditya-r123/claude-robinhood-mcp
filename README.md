@@ -46,7 +46,7 @@ sudo npm install -g @anthropic-ai/claude-code
 which claude
 ```
 
-## Phase 3: Workspace, Timezone & Headless API Key
+## Phase 3: Workspace, Timezone & Headless Auth (Claude subscription)
 
 Configure the server timezone to align with US equity markets and create the workspace.
 
@@ -60,12 +60,16 @@ cd ~/quant_pod
 touch log.txt trade_execution.log
 ```
 
-**About the Anthropic API key.** Headless `claude -p` needs an API key to authenticate to Anthropic (this is separate from the Robinhood/brokerage auth in Phase 5). Cron does **not** read `~/.bashrc`, so exporting it there is not enough for scheduled runs — the key must be set in the crontab itself. We do that in Phase 6. You can still add it to your shell profile for interactive testing:
+**Auth runs on your Claude subscription — NOT the pay-per-token API.** Headless `claude -p` authenticates to Anthropic the same way an interactive session does. Generate a long-lived (~1 year) OAuth token once with `claude setup-token` (requires a Pro/Max plan), then set it as `CLAUDE_CODE_OAUTH_TOKEN` in the crontab (Phase 6). This is separate from the Robinhood/brokerage auth in Phase 5.
 
 ```bash
-echo "export ANTHROPIC_API_KEY='sk-ant-...'" >> ~/.bashrc
-source ~/.bashrc
+# One-time, over an SSH session (browser OAuth, like the Robinhood step in Phase 5):
+claude setup-token        # prints a token starting sk-ant-oat... — copy it
 ```
+
+> **Never set `ANTHROPIC_API_KEY`.** If that variable is present anywhere cron or your shell sees it (crontab, `~/.bashrc`), it *overrides* the subscription token and silently bills the metered API. The bundled `switch_to_subscription.sh` verifies a token and strips the key for you.
+>
+> **Model on Pro:** Pro effectively runs Sonnet (Opus is Max-tier and burns the weekly limit fast). The runner pins `--model sonnet` so behavior is predictable; usage is shared with your normal web/Claude Code use under Pro's 5-hour + weekly limits.
 
 ## Phase 4: The Strategy Configuration (ips_prompt.txt)
 
@@ -144,19 +148,20 @@ Open the cron scheduler:
 crontab -e
 ```
 
-Add the API key as an environment line (cron does not source your shell profile), then the two schedule lines pointing at the runner:
+Add the subscription token as an environment line (cron does not source your shell profile), then the two schedule lines pointing at the runner. See [`crontab.template`](crontab.template):
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-...
+CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat...
 
-# Morning Routine: 09:00 AM Eastern Time (Mon-Fri) — pre-flight auth check then trade
-0 9 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh morning
+# Morning Routine: 09:35 AM Eastern (Mon-Fri) — after the 09:30 open, so the
+# execution-window guardrail (#5) doesn't auto-veto every order.
+35 9 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh morning
 
-# Afternoon Routine: 03:30 PM Eastern Time (Mon-Fri) — pre-flight auth check then trade
+# Afternoon Routine: 03:30 PM Eastern (Mon-Fri) — pre-flight auth check then trade
 30 15 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh afternoon
 ```
 
-> **Flag notes.** `--dangerously-skip-permissions` auto-approves tool calls (required for unattended runs). `--max-turns 15` caps the agent loop to prevent runaway API cost. `--thinking adaptive` enables extended thinking — the CLI only accepts `enabled`, `adaptive`, or `disabled` (there is no `--thinking-budget` flag).
+> **Flag notes.** `--model sonnet` pins the model (the right tier on Pro; keeps cost/limits predictable). `--dangerously-skip-permissions` auto-approves tool calls (required for unattended runs). `--max-turns 15` caps the agent loop so one run can't drain your weekly limit. `--thinking adaptive` enables extended thinking — the CLI only accepts `enabled`, `adaptive`, or `disabled` (there is no `--thinking-budget` flag).
 
 ## Verification & Monitoring
 
@@ -210,7 +215,7 @@ What is **excluded** from every sync and from git (see `.gitignore` and the rsyn
 ## Security Notes
 
 * The Robinhood connection uses OAuth — there are **no brokerage credentials stored on disk**. Do not add your Robinhood username/password to any config file; the official MCP does not use them.
-* Your `ANTHROPIC_API_KEY` lives in the crontab. Treat the instance as sensitive: restrict SSH access, and rotate the key if the instance is ever exposed.
+* Auth is your **Claude subscription**, via a long-lived `CLAUDE_CODE_OAUTH_TOKEN` in the crontab (no `ANTHROPIC_API_KEY`, no metered API billing). The token is a ~1-year secret: restrict SSH access, and regenerate it with `claude setup-token` if the instance is ever exposed or after expiry.
 * The OAuth token cache is in `~/.claude/.credentials.json` (mode `600`). Anyone with that file can trade your account — protect it accordingly.
 * Your real account number is kept out of the repo: tracked files use the `__ACCOUNT_ID__` placeholder, and the real value lives only in the untracked `~/quant_pod/.account_id` (EC2) and `Makefile.local` (local). Both are gitignored and rsync-excluded.
 * Before pushing, `make gitpush` runs `scripts/check-secrets.sh` as a tripwire. It is a safety net, not a guarantee — keep secrets in the untracked files listed above.
