@@ -9,9 +9,8 @@
 
 CLAUDE_CODE_OAUTH_TOKEN=REPLACE_WITH_YOUR_OAUTH_TOKEN
 
-# Morning Routine: 09:35 AM Eastern (Mon-Fri) — after the 09:30 open so the
-# execution-window guardrail (#5) doesn't auto-veto every order.
-35 9 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh morning
-
-# Afternoon Routine: 03:30 PM Eastern (Mon-Fri) — pre-flight auth check then trade.
-30 15 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh afternoon
+# 4 identical daily runs (ET, Mon-Fri) — same strategy each run; the tag is a log label only.
+30 9 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh 0930
+0 12 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh 1200
+30 13 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh 1330
+15 15 * * 1-5 /home/ubuntu/quant_pod/run_trading.sh 1515
