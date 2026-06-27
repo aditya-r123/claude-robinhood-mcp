@@ -1,6 +1,6 @@
 # ── Robinhood Quant Pod — local <-> EC2 sync ────────────────────────────────
 # Real host/key/account live in Makefile.local (UNTRACKED). Copy the example:
-#     cp Makefile.local.example Makefile.local   # then fill in your values
+#     cp templates/Makefile.local.example Makefile.local   # then fill in your values
 # Never commit Makefile.local — it is gitignored.
 -include Makefile.local
 
