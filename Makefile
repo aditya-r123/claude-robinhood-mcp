@@ -25,6 +25,7 @@ RSYNC := rsync -avz --no-perms --omit-dir-times -e "$(SSH)" \
   --exclude='*.swp' --exclude='.DS_Store' \
   --exclude='.claude' \
   --exclude='node_modules/' \
+  --exclude='dashboard/' \
   --exclude='claude-robinhood-mcp/'
 
 .PHONY: help pull push diff-pull diff-push save deploy gitpush check-secrets

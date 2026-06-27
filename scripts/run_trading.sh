@@ -9,6 +9,13 @@ LOG="$HOME/quant_pod/trade_execution.log"
 MODE="${1:-scheduled}"
 ts() { date '+%Y-%m-%d %H:%M:%S %Z'; }
 
+# If the OAuth token isn't already in the environment (e.g. when run manually rather
+# than via crontab), pull it from crontab so auth works identically either way.
+if [ -z "${CLAUDE_CODE_OAUTH_TOKEN:-}" ]; then
+    _tok="$(crontab -l 2>/dev/null | awk -F= '/^CLAUDE_CODE_OAUTH_TOKEN=/{print $2}')"
+    [ -n "$_tok" ] && export CLAUDE_CODE_OAUTH_TOKEN="$_tok"
+fi
+
 echo "[$(ts)] ===== Starting $MODE run =====" >> "$LOG"
 
 if [ ! -s "$ACCOUNT_FILE" ]; then
