@@ -126,16 +126,38 @@ function addOrphans(prev: ActivityDay[], date: string, trades: TradeEntry[]): Ac
   );
 }
 
+function actCacheGet(): ActivityDay[] | null {
+  try {
+    const raw = sessionStorage.getItem('activity');
+    if (!raw) return null;
+    const { days, at } = JSON.parse(raw);
+    if (Date.now() - at > 300_000) return null; // 5 min TTL
+    return days as ActivityDay[];
+  } catch { return null; }
+}
+
 export default function ActivityLog() {
-  const [days, setDays] = useState<ActivityDay[]>([]);
+  const [days, setDays] = useState<ActivityDay[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return actCacheGet() ?? [];
+  });
   const [live, setLive] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return !actCacheGet(); // skip spinner if cache available
+  });
   const [error, setError] = useState('');
 
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const liveRef = useRef(false);
+  const liveRef  = useRef(false);
   liveRef.current = live;
+
+  // Persist to sessionStorage so the next visit shows cached runs instantly.
+  useEffect(() => {
+    if (days.length === 0) return;
+    try { sessionStorage.setItem('activity', JSON.stringify({ days, at: Date.now() })); } catch {}
+  }, [days]);
 
   async function load(showSpinner = false) {
     // Cancel any in-flight stream before starting a new one.
@@ -213,13 +235,16 @@ export default function ActivityLog() {
       if (stopped) return;
       timerRef.current = setTimeout(async () => {
         if (stopped) return;
-        await load();
+        await load(false); // background poll — never clears cached days
         schedule();
       }, liveRef.current ? 4000 : 30000);
     }
 
+    // On first mount: if we have cached days, do a silent background load so the
+    // cached data shows immediately. Only show spinner (and clear) when no cache.
+    const hasCached = days.length > 0;
     (async () => {
-      await load(true);
+      await load(!hasCached); // spinner only when no cache
       schedule();
     })();
 
@@ -236,13 +261,12 @@ export default function ActivityLog() {
   return (
     <div className="card">
       <div className="row">
-        <span className="meta">
+        <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>
           {loading && days.length === 0
             ? 'Loading…'
             : live
               ? '● agent running'
               : `${totalRuns} run${totalRuns === 1 ? '' : 's'}`}
-          {days.length > 0 && ' · trades + reasoning'}
         </span>
         <button className="btn ghost" onClick={() => load(true)} disabled={loading && days.length === 0}>
           {loading && days.length === 0 ? 'Loading…' : 'Refresh'}

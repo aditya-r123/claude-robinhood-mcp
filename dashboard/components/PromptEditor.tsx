@@ -71,10 +71,15 @@ export default function PromptEditor() {
     }
   }
 
+  // Claude token estimate: ~4 chars/token for English prose/code (BPE approximation).
+  // Word-weighted refinement: words × 1.3 to account for punctuation and subword splits.
+  const chars  = draft.length;
+  const words  = draft.split(/\s+/).filter(Boolean).length;
+  const tokens = Math.round(Math.max(chars / 4, words * 1.3));
+
   return (
     <div className="card">
       <div className="row">
-        <span className="meta">{path || 'ips_prompt.txt'}</span>
         <div style={{ display: 'flex', gap: 8 }}>
           <button className="btn ghost" onClick={load} disabled={loading || saving}>
             Reload
@@ -95,7 +100,8 @@ export default function PromptEditor() {
         placeholder={loading ? 'Loading…' : ''}
       />
       <div className="meta" style={{ marginTop: 8 }}>
-        {draft.length.toLocaleString()} chars{dirty ? ' · unsaved changes' : ''}
+        {chars.toLocaleString()} chars / {tokens.toLocaleString()} input tokens
+        {dirty ? ' · unsaved changes' : ''}
       </div>
     </div>
   );

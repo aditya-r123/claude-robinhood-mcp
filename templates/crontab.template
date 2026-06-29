@@ -1,10 +1,6 @@
-# Robinhood Quant Pod crontab. Install:  crontab templates/crontab.template
-# Auth via a Claude subscription token (claude setup-token). NEVER set ANTHROPIC_API_KEY
-# anywhere — it overrides the token and bills the metered API. This file holds a secret.
-
 CLAUDE_CODE_OAUTH_TOKEN=REPLACE_WITH_YOUR_OAUTH_TOKEN
+# 4 identical daily runs (ET), same strategy each time:
 
-# 4 identical daily runs (ET, Mon-Fri); the tag is a log label only.
 30 9 * * 1-5 /home/ubuntu/quant_pod/scripts/run_trading.sh 0930
 0 12 * * 1-5 /home/ubuntu/quant_pod/scripts/run_trading.sh 1200
 30 13 * * 1-5 /home/ubuntu/quant_pod/scripts/run_trading.sh 1330
