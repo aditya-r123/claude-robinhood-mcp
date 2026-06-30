@@ -9,6 +9,20 @@ interface Entry {
   weekdays: number[]; // 0=Sun … 6=Sat, sorted
 }
 
+function taskName(hour: number, min: number): string {
+  const t = hour * 60 + min;
+  if (t <  4 * 60)              return 'Overnight';
+  if (t <  9 * 60 + 30)        return 'Pre-Market';
+  if (t <  9 * 60 + 45)        return 'Market Open';
+  if (t < 12 * 60)              return 'Morning';
+  if (t < 13 * 60 + 30)        return 'Midday';
+  if (t < 15 * 60)              return 'Afternoon';
+  if (t < 15 * 60 + 30)        return 'Market Close';
+  if (t < 16 * 60)              return 'End of Day';
+  if (t < 20 * 60)              return 'After-Hours';
+  return 'Overnight';
+}
+
 // Mon→Fri first, then Sat, Sun — mirrors how traders think about weekdays
 const DAYS = [
   { label: 'M',  idx: 1 },
@@ -47,7 +61,7 @@ function formatNextRun(isoStr: string | null): string {
   });
   const rel   = diffM < 60 ? `${diffM}m`
     : `${Math.floor(diffM / 60)}h${diffM % 60 ? ` ${diffM % 60}m` : ''}`;
-  return `${day} at ${time} ET · in ${rel}`;
+  return `${day} at ${time} ET, in ${rel}`;
 }
 
 export default function CronScheduler() {
@@ -135,7 +149,7 @@ export default function CronScheduler() {
           <div className="meta" style={{ marginTop: 3 }}>
             {loading
               ? 'Loading…'
-              : <>next run: <span style={{ color: 'var(--accent)' }}>{formatNextRun(nextRun)}</span></>}
+              : <>next run: <span style={{ color: 'var(--rh-green)' }}>{formatNextRun(nextRun)}</span></>}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -152,15 +166,17 @@ export default function CronScheduler() {
       {/* Column headers */}
       {!loading && entries.length > 0 && (
         <div className="cron-col-heads">
-          <span>Time (ET)</span>
+          <span className="cron-col-name">Run</span>
+          <span className="cron-col-time">Time (ET)</span>
           <span>Days</span>
         </div>
       )}
 
       {/* Entry rows */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         {entries.map(entry => (
           <div key={entry.id} className="cron-row">
+            <span className="cron-name">{taskName(entry.hour, entry.min)}</span>
             <input
               type="time"
               className="cron-time"

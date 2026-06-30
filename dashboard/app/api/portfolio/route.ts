@@ -16,8 +16,9 @@ export const dynamic = 'force-dynamic';
 function tfParams(tf: string): { interval: string; start_time: string } {
   const now = Date.now();
   switch (tf) {
-    // 1H: finest available bars (15-second) over the past 60 minutes
-    case '1H':  return { interval: '15second', start_time: new Date(now - 3_600_000).toISOString() };
+    // 1H: minute bars over last 6 h — always captures the current/last trading session
+    // (15-second is unreliable for stock historicals and returns nothing outside market hours)
+    case '1H':  return { interval: 'minute',   start_time: new Date(now - 6 * 3_600_000).toISOString() };
     case '1D':  return { interval: 'hour',     start_time: new Date(now - 86_400_000).toISOString() };
     case '1W':  return { interval: 'hour',     start_time: new Date(now - 7  * 86_400_000).toISOString() };
     case '1M':  return { interval: 'day',      start_time: new Date(now - 31 * 86_400_000).toISOString() };
@@ -85,7 +86,7 @@ async function buildData(accountId: string, tf: string): Promise<unknown> {
       start_time = first.toISOString();
       const ageDays = (Date.now() - first.getTime()) / 86_400_000;
       // Pick interval so we get a reasonable number of bars across the full history.
-      if      (ageDays < 1)    interval = '15second';
+      if      (ageDays < 1)    interval = 'minute';
       else if (ageDays < 3)    interval = 'minute';
       else if (ageDays < 14)   interval = 'hour';
       else if (ageDays < 90)   interval = 'day';

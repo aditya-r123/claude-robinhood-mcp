@@ -51,7 +51,7 @@ function RunCard({ run, defaultOpen }: { run: ActivityRun; defaultOpen: boolean 
           <StatusBadge run={run} />
           <span className="t">
             {formatTs(run.date, run.time)}
-            {run.durationSec != null ? ` · ${formatDuration(run.durationSec)}` : ''}
+            {run.durationSec != null ? ` (${formatDuration(run.durationSec)})` : ''}
           </span>
         </div>
       </div>
@@ -72,7 +72,7 @@ function RunCard({ run, defaultOpen }: { run: ActivityRun; defaultOpen: boolean 
 
       {hasReasoning && (
         <details className="reasoning" open={defaultOpen}>
-          <summary>Reasoning{run.sections.length ? ` · ${run.sections.length} stages` : ''}</summary>
+          <summary>Reasoning{run.sections.length ? ` (${run.sections.length} stages)` : ''}</summary>
           {run.sections.length > 0 ? (
             run.sections.map((s, i) => (
               <div className="stage" key={i}>

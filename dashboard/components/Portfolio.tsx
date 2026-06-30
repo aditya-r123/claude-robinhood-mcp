@@ -30,7 +30,7 @@ const TFS: { tf: TF; label: string }[] = [
   { tf: '1W',  label: 'weekly'   },
   { tf: '1M',  label: 'monthly'  },
   { tf: '1Y',  label: 'yearly'   },
-  { tf: 'MAX', label: 'MAX'      },
+  { tf: 'MAX', label: 'max'      },
 ];
 
 // ── session cache ──────────────────────────────────────────────────────────
@@ -93,12 +93,29 @@ function bpNum(raw: unknown): number {
     return pf((raw as Record<string, unknown>).buying_power);
   return pf(raw as string | undefined);
 }
+function rangeTimeLabel(iso: string, tf: TF): string {
+  const d = new Date(iso);
+  if (tf === '1H') {
+    return d.toLocaleTimeString('en-US', {
+      timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true,
+    });
+  }
+  if (tf === '1D' || tf === '1W') {
+    return d.toLocaleString('en-US', {
+      timeZone: 'America/New_York', month: 'short', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true,
+    });
+  }
+  return d.toLocaleDateString('en-US', {
+    timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric',
+  });
+}
+
 function barLabel(iso: string, tf: TF): string {
   const d = new Date(iso);
   if (tf === '1H') {
     return d.toLocaleTimeString('en-US', {
-      timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit',
-      second: '2-digit', hour12: true,
+      timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true,
     });
   }
   if (tf === '1D') {
@@ -203,7 +220,14 @@ function LineChart({
   const linePts = fullLinePts;
   const fillPts = fullFillPts;
 
-  const xIdxs  = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * (series.length - 1)));
+  // Deduplicated, count-limited axis labels — avoids overlapping on short/dense series
+  const maxXLabels = tf === '1H' ? 4 : 5;
+  const xCount     = Math.min(maxXLabels, Math.max(2, Math.floor(series.length / 3)));
+  const xIdxs      = [...new Set(
+    Array.from({ length: xCount }, (_, i) =>
+      Math.round(i * (series.length - 1) / Math.max(1, xCount - 1)),
+    ),
+  )];
   const yLabels = [vMin, (vMin + vMax) / 2, vMax];
 
   // ── event helpers ──────────────────────────────────────────────────────
@@ -503,7 +527,7 @@ function HoldingsTable({ data, tf }: { data: ApiData; tf: TF }) {
                   <span className="rh-holding-sym">{pos.symbol}</span>
                   <span className="rh-holding-caret">{isOpen ? '▾' : '▸'}</span>
                 </div>
-                <span className="rh-holding-shares">{qtyStr} sh · avg {f$(avgCost)}</span>
+                <span className="rh-holding-shares">{qtyStr} sh, avg {f$(avgCost)}</span>
               </div>
 
               {/* Right: 3×2 grid of metrics */}
@@ -547,12 +571,17 @@ function HoldingsTable({ data, tf }: { data: ApiData; tf: TF }) {
                       const d = range.to.value - range.from.value;
                       const p = range.from.value > 0 ? (d / range.from.value) * 100 : 0;
                       return (
-                        <>
+                        <div className="rh-stock-range-info">
+                          <span className="rh-stock-range-ts">
+                            {rangeTimeLabel(range.from.time, tf)}
+                            <span className="rh-pf-range-arrow"> → </span>
+                            {rangeTimeLabel(range.to.time, tf)}
+                          </span>
                           <span className={d >= 0 ? 'pos' : 'neg'}>
                             {d >= 0 ? '+' : ''}{f$(d)} ({d >= 0 ? '+' : ''}{p.toFixed(2)}%)
                           </span>
-                          <span className="muted"> selected range · click to clear</span>
-                        </>
+                          <span className="muted rh-stock-range-clear">click to clear</span>
+                        </div>
                       );
                     })()
                   ) : (
@@ -603,9 +632,9 @@ function OrdersSection({ data }: { data: ApiData }) {
             <span className={`rh-order-side ${o.side}`}>{o.side.toUpperCase()}</span>
             <div className="rh-order-body">
               <span className="rh-order-sym">{o.symbol}</span>
-              <span className="muted"> · {pf(o.quantity)} shares</span>
+              <span className="muted">  {pf(o.quantity)} sh</span>
               {o.price && <span className="muted"> @ {f$(pf(o.price))}</span>}
-              <span className="muted"> · {o.type}</span>
+              <span className="muted">  {o.type}</span>
             </div>
             <div className="rh-order-right">
               <span className={`rh-order-state ${o.state}`}>{STATE_LABEL[o.state] ?? o.state}</span>
@@ -661,8 +690,7 @@ export default function Portfolio() {
       {/* Brand strip */}
       <div className="rh-brand-strip">
         <div className="rh-brand">
-          <img src="/logo.png" width={30} height={30} alt="Robinhood" style={{ borderRadius: 7, flexShrink: 0 }} />
-          <span className="rh-brand-name">Robinhood Agentic Trading</span>
+          <span className="rh-brand-name">Trading History</span>
         </div>
         {updatedStr && <span className="rh-updated">updated {updatedStr}</span>}
       </div>
@@ -682,6 +710,13 @@ export default function Portfolio() {
               {positive ? '▲' : '▼'} {f$(Math.abs(delta))} ({fPct(Math.abs(deltaPct))})
               <span className="rh-pf-period">{periodLabel}</span>
             </div>
+            {hasRange && (
+              <div className="rh-pf-range-ts">
+                {rangeTimeLabel(rangePts.from.time, tf)}
+                <span className="rh-pf-range-arrow"> → </span>
+                {rangeTimeLabel(rangePts.to.time, tf)}
+              </div>
+            )}
           </div>
 
           {/* Portfolio chart with hover scrub + drag-to-select */}
@@ -723,7 +758,7 @@ export default function Portfolio() {
           <div className="rh-section">
             <div className="rh-section-head">
               Stocks
-              <span className="rh-section-hint">tap to expand · drag chart to see range P&amp;L</span>
+              <span className="rh-section-hint">tap to expand — drag chart to select a range</span>
             </div>
             <HoldingsTable data={data} tf={tf} />
           </div>

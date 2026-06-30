@@ -46,7 +46,7 @@ body {
 }
 .brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
 }
 .brand h1 {
@@ -79,6 +79,12 @@ body {
 .dot.idle {
   background: var(--muted);
 }
+.dot.down {
+  background: var(--red);
+}
+.status.inactive {
+  color: var(--red);
+}
 @keyframes pulse {
   0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.5); }
   70% { box-shadow: 0 0 0 7px rgba(63, 185, 80, 0); }
@@ -107,15 +113,20 @@ body {
 }
 .tab.active {
   color: var(--text);
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--rh-green);
 }
+.tab[draggable] { cursor: grab; user-select: none; }
+.tab[draggable]:active { cursor: grabbing; }
+.tab.tab-dragging { opacity: 0.35; }
+.tab.tab-drop-left  { box-shadow: -2px 0 0 var(--rh-green); }
+.tab.tab-drop-right { box-shadow:  2px 0 0 var(--rh-green); }
 
-/* Cards / panels */
+/* Cards / panels — no gray box, matches portfolio tab */
 .card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
+  background: var(--bg);
+  border: none;
+  border-radius: 0;
+  padding: 0 0 24px;
 }
 
 .row {
@@ -128,8 +139,8 @@ body {
 
 /* Buttons */
 .btn {
-  background: var(--accent);
-  color: #fff;
+  background: var(--rh-green);
+  color: #000;
   border: none;
   border-radius: 7px;
   padding: 8px 16px;
@@ -145,9 +156,13 @@ body {
   cursor: default;
 }
 .btn.ghost {
-  background: var(--panel-2);
-  color: var(--text);
+  background: transparent;
+  color: var(--muted);
   border: 1px solid var(--border);
+}
+.btn.ghost:hover {
+  color: var(--text);
+  border-color: var(--rh-green);
 }
 
 /* Prompt editor */
@@ -167,7 +182,7 @@ textarea.editor {
 }
 textarea.editor:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--rh-green);
 }
 
 .meta {
@@ -213,9 +228,9 @@ textarea.editor:focus {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--accent);
-  background: rgba(91, 140, 255, 0.1);
-  border: 1px solid rgba(91, 140, 255, 0.25);
+  color: var(--rh-green);
+  background: rgba(0, 200, 5, 0.08);
+  border: 1px solid rgba(0, 200, 5, 0.22);
   border-radius: 5px;
   padding: 2px 8px;
   margin-bottom: 8px;
@@ -253,17 +268,18 @@ textarea.editor:focus {
 .pill.pass { background: rgba(63, 185, 80, 0.14); color: var(--green); }
 .pill.fail { background: rgba(248, 81, 73, 0.14); color: var(--red); }
 
-/* Agent reasoning — run cards */
+/* Agent reasoning — run cards (flat list style, no gray boxes) */
 .runcard {
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 13px 14px;
-  margin: 0 0 12px 4px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  padding: 16px 0;
+  margin: 0;
 }
+.runcard:last-child { border-bottom: none; }
 .runcard.islive {
-  border-color: rgba(63, 185, 80, 0.5);
-  box-shadow: 0 0 0 1px rgba(63, 185, 80, 0.25);
+  border-bottom-color: rgba(0, 200, 5, 0.35);
 }
 .runcard-head {
   display: flex;
@@ -300,8 +316,8 @@ textarea.editor:focus {
 
 .decision,
 .runsummary {
-  background: rgba(91, 140, 255, 0.08);
-  border: 1px solid rgba(91, 140, 255, 0.22);
+  background: rgba(0, 200, 5, 0.05);
+  border: 1px solid rgba(0, 200, 5, 0.18);
   border-radius: 7px;
   padding: 9px 11px;
   font-size: 13px;
@@ -309,16 +325,22 @@ textarea.editor:focus {
   margin: 8px 0;
 }
 .runsummary {
-  background: var(--panel);
+  background: none;
   border-color: var(--border);
+  border-left: 2px solid var(--border);
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 0;
   color: var(--muted);
+  padding: 6px 0 6px 12px;
 }
 .decision-label {
   display: block;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--rh-green);
   margin-bottom: 3px;
   font-weight: 700;
 }
@@ -361,7 +383,7 @@ details.sources[open] > summary::before {
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--rh-green);
   margin-bottom: 3px;
 }
 .stage-body {
@@ -388,7 +410,7 @@ details.sources li {
   word-break: break-all;
 }
 details.sources a {
-  color: var(--accent);
+  color: var(--rh-green);
   text-decoration: none;
 }
 details.sources a:hover {
@@ -517,7 +539,7 @@ details.sources a:hover {
 .pf-table .pf-sym {
   font-weight: 700;
   font-family: var(--mono);
-  color: var(--accent);
+  color: var(--text);
   font-size: 14px;
 }
 .pos { color: var(--green); }
@@ -555,7 +577,7 @@ details.sources a:hover {
 .pf-order-sym {
   font-weight: 700;
   font-family: var(--mono);
-  color: var(--accent);
+  color: var(--text);
 }
 .pf-order-state {
   margin-left: auto;
@@ -565,7 +587,7 @@ details.sources a:hover {
   letter-spacing: 0.04em;
 }
 .pf-order-state.queued, .pf-order-state.confirmed { color: var(--yellow); }
-.pf-order-state.partially_filled { color: var(--accent); }
+.pf-order-state.partially_filled { color: var(--yellow); }
 .pf-order-state.filled  { color: var(--green); }
 .pf-order-state.cancelled { color: var(--muted); }
 
@@ -586,11 +608,11 @@ details.sources a:hover {
   cursor: pointer;
   letter-spacing: 0.02em;
 }
-.pf-tf-btn:hover { color: var(--text); border-color: var(--accent); }
+.pf-tf-btn:hover { color: var(--text); border-color: var(--rh-green); }
 .pf-tf-btn.active {
   color: var(--text);
-  background: rgba(91, 140, 255, 0.12);
-  border-color: var(--accent);
+  background: rgba(0, 200, 5, 0.1);
+  border-color: var(--rh-green);
 }
 
 /* Per-stock expandable chart */
@@ -652,6 +674,17 @@ details.sources a:hover {
 /* Portfolio value header */
 .rh-pf-header {
   margin-bottom: 12px;
+}
+.rh-pf-range-ts {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  letter-spacing: 0.01em;
+}
+.rh-pf-range-arrow {
+  color: var(--border);
+  font-size: 11px;
 }
 .rh-pf-value {
   font-size: 40px;
@@ -807,7 +840,7 @@ details.sources a:hover {
   transition: color 0.15s;
 }
 .rh-holding-caret {
-  font-size: 11px;
+  font-size: 16px;
   color: var(--muted);
   transition: color 0.15s;
 }
@@ -862,11 +895,27 @@ details.sources a:hover {
 .rh-mini-chart {
   width: 100%;
   height: 80px;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
-  background: var(--panel-2);
+  background: var(--bg);
 }
 .rh-mini-chart .pf-chart { display: block; width: 100%; height: 100%; }
+
+.rh-stock-range-info {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.rh-stock-range-ts {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.rh-stock-range-clear {
+  font-size: 11px;
+  opacity: 0.6;
+}
 
 /* Orders */
 .rh-orders { display: flex; flex-direction: column; gap: 1px; }
@@ -913,7 +962,7 @@ details.sources a:hover {
 }
 .rh-order-state.queued,
 .rh-order-state.confirmed { color: var(--yellow); }
-.rh-order-state.partially_filled { color: var(--accent); }
+.rh-order-state.partially_filled { color: var(--yellow); }
 .rh-order-state.filled    { color: var(--rh-green); }
 .rh-order-state.cancelled,
 .rh-order-state.rejected  { color: var(--muted); }
@@ -932,32 +981,49 @@ details.sources a:hover {
   border-bottom: 1px solid var(--border);
   margin-bottom: 8px;
 }
-.cron-col-heads span:first-child { width: 100px; flex-shrink: 0; }
+.cron-col-name { width: 110px; flex-shrink: 0; }
+.cron-col-time { width: 140px; flex-shrink: 0; }
 
 .cron-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  gap: 14px;
+  padding: 14px 0;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+}
+.cron-row:last-child { border-bottom: none; }
+.cron-name {
+  width: 110px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 .cron-time {
-  width: 100px;
+  width: 140px;
   flex-shrink: 0;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 5px 8px;
-  font-size: 13px;
+  padding: 6px 10px;
+  font-size: 14px;
   font-family: var(--mono);
   color-scheme: dark;
 }
 .cron-time:focus {
   outline: none;
-  border-color: var(--accent);
+  border-color: var(--rh-green);
 }
 .cron-days {
   display: flex;
